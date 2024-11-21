@@ -1,6 +1,11 @@
 import java.io.IOException;
 import java.util.*;
 
+/**
+ * the entry point for the Longhorn Network application.
+ * orchestrates the parsing of student data, roommate matching, pod formation, and referral pathfinding
+ * to simulate the network of university students.
+ */
 public class Main {
     public static void main(String[] args) {
         if (args.length == 0) {
