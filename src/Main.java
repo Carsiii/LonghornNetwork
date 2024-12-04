@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * the entry point for the Longhorn Network application.
@@ -26,7 +28,18 @@ public class Main {
 
             // Referral path finding
             ReferralPathFinder pathFinder = new ReferralPathFinder(graph);
-            // TODO: Implement user interaction for specifying a target company
+            System.out.println("\nReferral Path:");
+            List<UniversityStudent> referralPath = pathFinder.findReferralPath(students.get(1), "Google");
+            pathFinder.printReferralPath(students.get(1), "Google");
+
+            List<UniversityStudent> referralPath2 = pathFinder.findReferralPath(students.get(0), "Microsoft");
+            pathFinder.printReferralPath(students.get(0), "Microsoft");
+
+            ExecutorService executor = Executors.newFixedThreadPool(3);
+            executor.submit(new FriendRequestThread(students.get(0), students.get(1)));
+            executor.submit(new ChatThread(students.get(0), students.get(1), "hi"));
+            executor.submit(new ChatThread(students.get(1), students.get(0), "bye"));
+            executor.shutdown();
 
         } catch (IOException e) {
             e.printStackTrace();

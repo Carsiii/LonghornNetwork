@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The ReferralPathFinder class is responsible for finding the shortest referral path between
@@ -15,6 +16,35 @@ public class ReferralPathFinder {
      */
     public ReferralPathFinder(StudentGraph graph) {
         // Constructor
+        this.graph = graph;
+    }
+
+    public static void printReferralPaths(ReferralPathFinder referralPathFinder, UniversityStudent start, String targetCompany) {
+        System.out.println("\nReferral Path:");
+        List<UniversityStudent> path = referralPathFinder.findReferralPath(start, targetCompany);
+        if (path.isEmpty()) {
+            System.out.println("No path found to " + targetCompany);
+        } else {
+            System.out.print("Path to " + targetCompany + ": ");
+            System.out.println(path.stream().map(UniversityStudent::getName).collect(Collectors.joining(" -> ")));
+        }
+    }
+    public void printReferralPath(UniversityStudent start, String targetCompany) {
+        System.out.print("Referral Path to " + targetCompany + ": ");
+
+        // Find the referral path
+        List<UniversityStudent> referralPath = findReferralPath(start, targetCompany);
+
+        // Check if a path was found
+        if (referralPath.isEmpty()) {
+            System.out.println("No path found to " + targetCompany + ".");
+        } else {
+            // Format and print the path
+            String path = referralPath.stream()
+                    .map(UniversityStudent::getName)
+                    .collect(Collectors.joining(" -> "));
+            System.out.println(path);
+        }
     }
 
     /**
@@ -28,7 +58,51 @@ public class ReferralPathFinder {
      *         or an empty list if no path is found
      */
     public List<UniversityStudent> findReferralPath(UniversityStudent start, String targetCompany) {
-        // Method signature only
+        Map<UniversityStudent, Double> distances = new HashMap<>(); // Shortest distance to each student
+        PriorityQueue<UniversityStudent> queue = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
+        Map<UniversityStudent, UniversityStudent> parents = new HashMap<>(); // To reconstruct the path
+
+        // Initialize all distances to infinity, except the start node
+        for (UniversityStudent student : graph.getAllNodes()) {
+            distances.put(student, Double.POSITIVE_INFINITY);
+        }
+        distances.put(start, 0.0);
+        queue.add(start);
+
+        // Process nodes
+        while (!queue.isEmpty()) {
+            UniversityStudent current = queue.poll();
+
+            // Check if this student has the target internship
+            if (current.getPreviousInternships().contains(targetCompany)) {
+                // Reconstruct and return the path
+                return reconstructPath(parents, current);
+            }
+
+            // Explore neighbors
+            for (StudentGraph.Edge edge : graph.getNeighbors(current)) {
+                UniversityStudent neighbor = edge.getTarget();
+                double newDistance = distances.get(current) + edge.getWeight();
+
+                // Update the shortest path to this neighbor if it's better
+                if (newDistance < distances.get(neighbor)) {
+                    distances.put(neighbor, newDistance);
+                    parents.put(neighbor, current);
+                    queue.add(neighbor);
+                }
+            }
+        }
+
+        // No path found
         return new ArrayList<>();
+    }
+
+    // Helper method to reconstruct the path from the parent map
+    private List<UniversityStudent> reconstructPath(Map<UniversityStudent, UniversityStudent> parents, UniversityStudent target) {
+        List<UniversityStudent> path = new ArrayList<>();
+        for (UniversityStudent at = target; at != null; at = parents.get(at)) {
+            path.add(0, at); // Prepend to the path
+        }
+        return path;
     }
 }
